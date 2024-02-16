@@ -11,8 +11,14 @@ parameters:
   type: boolean
   default: true
 
-# manual run only
-trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+      - envs/*
+  paths:
+    include:
+      - app
 
 pool:
   vmImage: 'windows-latest'
