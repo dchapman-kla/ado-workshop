@@ -6,6 +6,10 @@ parameters:
   values:
   - Debug
   - Release
+- name: runApp
+  displayName: Run Application
+  type: boolean
+  default: true
 
 # manual run only
 trigger: none
@@ -36,3 +40,4 @@ steps:
  
     & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
   displayName: Run Application
+  condition: ${{ parameters.runApp }}
