@@ -28,3 +28,11 @@ steps:
     solution: $(solution)
     platform: $(buildPlatform)
     configuration: ${{ parameters.buildConfiguration }}
+ 
+- powershell: |
+    $path = "$(Build.SourcesDirectory)"
+    $platform = "$(buildPlatform)"
+    $buildConfig = "${{ parameters.buildConfiguration }}"
+ 
+    & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
+  displayName: Run Application
