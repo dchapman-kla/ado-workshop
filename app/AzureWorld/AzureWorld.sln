@@ -5,6 +5,8 @@ VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TotallyNotMarioWorld", "TotallyNotMarioWorld\TotallyNotMarioWorld.csproj", "{FAEBCDDF-577C-4AE7-9EE6-6A5480AE13D1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TotallyNotLuigiWorld", "TotallyNotLuigiWorld\TotallyNotLuigiWorld.csproj", "{BEF45404-23B8-4B0B-A4DD-CCA54AA9C51B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FAEBCDDF-577C-4AE7-9EE6-6A5480AE13D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAEBCDDF-577C-4AE7-9EE6-6A5480AE13D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAEBCDDF-577C-4AE7-9EE6-6A5480AE13D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEF45404-23B8-4B0B-A4DD-CCA54AA9C51B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEF45404-23B8-4B0B-A4DD-CCA54AA9C51B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEF45404-23B8-4B0B-A4DD-CCA54AA9C51B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEF45404-23B8-4B0B-A4DD-CCA54AA9C51B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -14,25 +14,52 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: 'app/AzureWorld/TotallyNotMarioWorld/TotallyNotMarioWorld.csproj'
+  solutionMario: 'app/AzureWorld/TotallyNotMarioWorld/TotallyNotMarioWorld.csproj'
+  solutionLuigi: 'app/AzureWorld/TotallyNotLuigiWorld/TotallyNotLuigiWorld.csproj'
 
-steps:
-- task: NuGetToolInstaller@1
+jobs:
+- job: BuildMario
+  displayName: Build Mario
+  steps: 
+  - task: NuGetToolInstaller@1
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: $(solution)
- 
-- task: VSBuild@1 
-  inputs: 
-    solution: $(solution)
-    platform: $(buildPlatform)
-    configuration: ${{ parameters.buildConfiguration }}
- 
-- powershell: |
-    $path = "$(Build.SourcesDirectory)"
-    $platform = "$(buildPlatform)"
-    $buildConfig = "${{ parameters.buildConfiguration }}"
- 
-    & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
-  displayName: Run Application
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: $(solutionMario)
+
+  - task: VSBuild@1 
+    inputs: 
+      solution: $(solutionMario)
+      platform: $(buildPlatform)
+      configuration: ${{ parameters.buildConfiguration }}
+  
+  - powershell: |
+      $path = "$(Build.SourcesDirectory)"
+      $platform = "$(buildPlatform)"
+      $buildConfig = "${{ parameters.buildConfiguration }}"
+  
+      & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
+    displayName: Run Application
+
+- job: BuildLuigi
+  displayName: Build Luigi
+  steps: 
+  - task: NuGetToolInstaller@1
+
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: $(solutionLuigi)
+
+  - task: VSBuild@1 
+    inputs: 
+      solution: $(solutionLuigi)
+      platform: $(buildPlatform)
+      configuration: ${{ parameters.buildConfiguration }}
+  
+  - powershell: |
+      $path = "$(Build.SourcesDirectory)"
+      $platform = "$(buildPlatform)"
+      $buildConfig = "${{ parameters.buildConfiguration }}"
+  
+      & "$path\app\AzureWorld\TotallyNotLuigiWorld\bin\$platform\$buildConfig\net6.0\TotallyNotLuigiWorld.exe"
+    displayName: Run Application
