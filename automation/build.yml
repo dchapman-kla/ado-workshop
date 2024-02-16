@@ -25,6 +25,13 @@ pool:
 
 variables:
   solution: 'app/AzureWorld/TotallyNotMarioWorld/TotallyNotMarioWorld.csproj'
+  start_time: $[ format('{0:yyyy}/{0:MM}/{0:dd}-{0:HH}:{0:mm}:{0:ss}', pipeline.startTime) ]
+  ${{ if and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/envs/prod')) }}:
+    build_configuration: 'Release'
+  ${{ if and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/envs/dev')) }}:
+    build_configuration: 'Debug'
+  ${{ if eq( variables['Build.Reason'], 'Manual' ) }}:
+    build_configuration: ${{ parameters.buildConfiguration }}
 
 steps:
 - task: NuGetToolInstaller@1
@@ -37,13 +44,23 @@ steps:
   inputs: 
     solution: $(solution)
     platform: $(buildPlatform)
-    configuration: ${{ parameters.buildConfiguration }}
- 
-- powershell: |
-    $path = "$(Build.SourcesDirectory)"
-    $platform = "$(buildPlatform)"
-    $buildConfig = "${{ parameters.buildConfiguration }}"
- 
-    & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
-  displayName: Run Application
-  condition: ${{ parameters.runApp }}
+    configuration: $(build_configuration)
+
+- ${{ if parameters.runApp }}:
+  - powershell: |
+      $ptime = "$(start_time)"
+      $stime = Get-Date -Format "yyyy/MM/dd-HH:mm:ss"
+      $path = "$(Build.SourcesDirectory)"
+      $platform = "$(buildPlatform)"
+      $buildConfig = "$(build_configuration)"
+
+      Write-Host "Pipeline timestamp:  $ptime"
+      Write-Host "Script timestamp:    $stime"
+      Write-Host "Platform:            $platform"
+      Write-Host "Build configuration: $buildConfig"
+      Write-Host "Source path:         $path"
+      Write-Host
+      Write-Host "Running ..."
+  
+      & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
+    displayName: Run Application
