@@ -6,9 +6,19 @@ parameters:
   values:
   - Debug
   - Release
+- name: runApp
+  displayName: Run Application
+  type: boolean
+  default: true
 
-# manual run only
-trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+      - envs/*
+  paths:
+    include:
+      - app
 
 pool:
   vmImage: 'windows-latest'
@@ -20,6 +30,13 @@ variables:
   solutionLuigi: 'app/AzureWorld/TotallyNotLuigiWorld'
   solutionLuigiFile: 'TotallyNotLuigiWorld.csproj'
   artifactLuigi: 'Luigi'
+  start_time: $[ format('{0:yyyy}/{0:MM}/{0:dd}-{0:HH}:{0:mm}:{0:ss}', pipeline.startTime) ] 
+  ${{ if and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/envs/prod')) }}: 
+    build_configuration: 'Release' 
+  ${{ if and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/envs/dev')) }}: 
+    build_configuration: 'Debug' 
+  ${{ if eq( variables['Build.Reason'], 'Manual' ) }}: 
+    build_configuration: ${{ parameters.buildConfiguration }} 
 
 stages: 
 - stage: Build 
@@ -38,11 +55,11 @@ stages:
       inputs: 
         solution: '$(solutionMario)/$(solutionMarioFile)'
         platform: $(buildPlatform)
-        configuration: ${{ parameters.buildConfiguration }}
+        configuration: $(build_configuration)
 
     - task: CopyFiles@2
       inputs:
-        SourceFolder: '$(Build.SourcesDirectory)/$(solutionMario)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+        SourceFolder: '$(Build.SourcesDirectory)/$(solutionMario)/bin/$(buildPlatform)/$(build_configuration)/net6.0'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
         OverWrite: true
 
@@ -65,11 +82,11 @@ stages:
       inputs: 
         solution: '$(solutionLuigi)/$(solutionLuigiFile)'
         platform: $(buildPlatform)
-        configuration: ${{ parameters.buildConfiguration }}
+        configuration: $(build_configuration)
 
     - task: CopyFiles@2
       inputs:
-        SourceFolder: '$(Build.SourcesDirectory)/$(solutionLuigi)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+        SourceFolder: '$(Build.SourcesDirectory)/$(solutionLuigi)/bin/$(buildPlatform)/$(build_configuration)/net6.0'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
         OverWrite: true
 
@@ -79,40 +96,59 @@ stages:
         artifact: '$(artifactLuigi)'
         publishLocation: 'pipeline' 
 
-- stage: Run 
-  displayName: 'Run' 
-  dependsOn: Build 
-  jobs: 
-  - job: RunMario 
-    displayName: Run Mario 
-    steps:  
-    - task: DownloadBuildArtifacts@1 
-      inputs: 
-        buildType: 'current' 
-        downloadType: 'single' 
-        artifactName: '$(artifactMario)' 
-        downloadPath: '$(System.ArtifactsDirectory)\$(artifactMario)' 
-        cleanDestinationFolder: true 
+- ${{ if parameters.runApp }}:
+  - stage: Run 
+    displayName: 'Run' 
+    dependsOn: Build 
+    jobs: 
+    - job: RunMario 
+      displayName: Run Mario 
+      steps:  
+      - task: DownloadBuildArtifacts@1 
+        inputs: 
+          buildType: 'current' 
+          downloadType: 'single' 
+          artifactName: '$(artifactMario)' 
+          downloadPath: '$(System.ArtifactsDirectory)\$(artifactMario)' 
+          cleanDestinationFolder: true 
  
-    - powershell: | 
-        $path = "$(System.ArtifactsDirectory)\$(artifactMario)" 
+      - powershell: | 
+          $ptime = "$(start_time)" 
+          $stime = Get-Date -Format "yyyy/MM/dd-HH:mm:ss" 
+          $path = "$(System.ArtifactsDirectory)\$(artifactMario)" 
+          Write-Host "Pipeline timestamp:  $ptime" 
+          Write-Host "Script timestamp:    $stime" 
+          Write-Host "Platform:            $(buildPlatform)" 
+          Write-Host "Build configuration: $(build_configuration)" 
+          Write-Host "Path:                $path" 
+          Write-Host   
+          Write-Host "Running ..." 
      
-        & "$path\TotallyNotMarioWorld.exe" 
-      displayName: Run Application 
+          & "$path\TotallyNotMarioWorld.exe" 
+        displayName: Run Application 
   
-  - job: RunLuigi
-    displayName: Run Luigi
-    steps: 
-    - task: DownloadBuildArtifacts@1
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: '$(artifactLuigi)'
-        downloadPath: '$(System.ArtifactsDirectory)\$(artifactLuigi)'
-        cleanDestinationFolder: true
+    - job: RunLuigi
+      displayName: Run Luigi
+      steps: 
+      - task: DownloadBuildArtifacts@1
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: '$(artifactLuigi)'
+          downloadPath: '$(System.ArtifactsDirectory)\$(artifactLuigi)'
+          cleanDestinationFolder: true
     
-    - powershell: |
-        $path = "$(System.ArtifactsDirectory)\$(artifactLuigi)"
+      - powershell: |
+          $ptime = "$(start_time)" 
+          $stime = Get-Date -Format "yyyy/MM/dd-HH:mm:ss" 
+          $path = "$(System.ArtifactsDirectory)\$(artifactLuigi)"
+          Write-Host "Pipeline timestamp:  $ptime" 
+          Write-Host "Script timestamp:    $stime" 
+          Write-Host "Platform:            $(buildPlatform)" 
+          Write-Host "Build configuration: $(build_configuration)" 
+          Write-Host "Path:                $path" 
+          Write-Host   
+          Write-Host "Running ..." 
     
-        & "$path\TotallyNotLuigiWorld.exe"
-      displayName: Run Application
+          & "$path\TotallyNotLuigiWorld.exe"
+        displayName: Run Application
