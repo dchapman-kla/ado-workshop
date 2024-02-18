@@ -21,93 +21,98 @@ variables:
   solutionLuigiFile: 'TotallyNotLuigiWorld.csproj'
   artifactLuigi: 'Luigi'
 
-jobs:
-- job: BuildMario
-  displayName: Build Mario
-  steps: 
-  - task: NuGetToolInstaller@1
+stages: 
+- stage: Build 
+  displayName: 'Build' 
+  jobs:
+  - job: BuildMario
+    displayName: Build Mario
+    steps: 
+    - task: NuGetToolInstaller@1
 
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '$(solutionMario)/$(solutionMarioFile)'
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solutionMario)/$(solutionMarioFile)'
 
-  - task: VSBuild@1 
-    inputs: 
-      solution: '$(solutionMario)/$(solutionMarioFile)'
-      platform: $(buildPlatform)
-      configuration: ${{ parameters.buildConfiguration }}
+    - task: VSBuild@1 
+      inputs: 
+        solution: '$(solutionMario)/$(solutionMarioFile)'
+        platform: $(buildPlatform)
+        configuration: ${{ parameters.buildConfiguration }}
 
-  - task: CopyFiles@2
-    inputs:
-      SourceFolder: '$(Build.SourcesDirectory)/$(solutionMario)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
-      OverWrite: true
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/$(solutionMario)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
+        OverWrite: true
 
-  - task: PublishPipelineArtifact@1
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
-      artifact: '$(artifactMario)'
-      publishLocation: 'pipeline'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
+        artifact: '$(artifactMario)'
+        publishLocation: 'pipeline'
 
-- job: RunMario
-  displayName: Run Mario
-  dependsOn: BuildMario
-  steps: 
-  - task: DownloadBuildArtifacts@1
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(artifactMario)'
-      downloadPath: '$(System.ArtifactsDirectory)\$(artifactMario)'
-      cleanDestinationFolder: true
+  - job: BuildLuigi
+    displayName: Build Luigi
+    steps: 
+    - task: NuGetToolInstaller@1
 
-  - powershell: |
-      $path = "$(System.ArtifactsDirectory)\$(artifactMario)"
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solutionLuigi)/$(solutionLuigiFile)'
+
+    - task: VSBuild@1 
+      inputs: 
+        solution: '$(solutionLuigi)/$(solutionLuigiFile)'
+        platform: $(buildPlatform)
+        configuration: ${{ parameters.buildConfiguration }}
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/$(solutionLuigi)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
+        OverWrite: true
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
+        artifact: '$(artifactLuigi)'
+        publishLocation: 'pipeline' 
+
+- stage: Run 
+  displayName: 'Run' 
+  dependsOn: Build 
+  jobs: 
+  - job: RunMario 
+    displayName: Run Mario 
+    steps:  
+    - task: DownloadBuildArtifacts@1 
+      inputs: 
+        buildType: 'current' 
+        downloadType: 'single' 
+        artifactName: '$(artifactMario)' 
+        downloadPath: '$(System.ArtifactsDirectory)\$(artifactMario)' 
+        cleanDestinationFolder: true 
+ 
+    - powershell: | 
+        $path = "$(System.ArtifactsDirectory)\$(artifactMario)" 
+     
+        & "$path\TotallyNotMarioWorld.exe" 
+      displayName: Run Application 
   
-      & "$path\TotallyNotMarioWorld.exe"
-    displayName: Run Application
-
-- job: BuildLuigi
-  displayName: Build Luigi
-  steps: 
-  - task: NuGetToolInstaller@1
-
-  - task: NuGetCommand@2
-    inputs:
-      restoreSolution: '$(solutionLuigi)/$(solutionLuigiFile)'
-
-  - task: VSBuild@1 
-    inputs: 
-      solution: '$(solutionLuigi)/$(solutionLuigiFile)'
-      platform: $(buildPlatform)
-      configuration: ${{ parameters.buildConfiguration }}
-
-  - task: CopyFiles@2
-    inputs:
-      SourceFolder: '$(Build.SourcesDirectory)/$(solutionLuigi)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
-      OverWrite: true
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
-      artifact: '$(artifactLuigi)'
-      publishLocation: 'pipeline'
-  
-- job: RunLuigi
-  displayName: Run Luigi
-  dependsOn: BuildLuigi
-  steps: 
-  - task: DownloadBuildArtifacts@1
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: '$(artifactLuigi)'
-      downloadPath: '$(System.ArtifactsDirectory)\$(artifactLuigi)'
-      cleanDestinationFolder: true
-  
-  - powershell: |
-      $path = "$(System.ArtifactsDirectory)\$(artifactLuigi)"
-  
-      & "$path\TotallyNotLuigiWorld.exe"
-    displayName: Run Application
+  - job: RunLuigi
+    displayName: Run Luigi
+    steps: 
+    - task: DownloadBuildArtifacts@1
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: '$(artifactLuigi)'
+        downloadPath: '$(System.ArtifactsDirectory)\$(artifactLuigi)'
+        cleanDestinationFolder: true
+    
+    - powershell: |
+        $path = "$(System.ArtifactsDirectory)\$(artifactLuigi)"
+    
+        & "$path\TotallyNotLuigiWorld.exe"
+      displayName: Run Application
