@@ -14,8 +14,12 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solutionMario: 'app/AzureWorld/TotallyNotMarioWorld/TotallyNotMarioWorld.csproj'
-  solutionLuigi: 'app/AzureWorld/TotallyNotLuigiWorld/TotallyNotLuigiWorld.csproj'
+  solutionMario: 'app/AzureWorld/TotallyNotMarioWorld'
+  solutionMarioFile: 'TotallyNotMarioWorld.csproj'
+  artifactMario: 'Mario'
+  solutionLuigi: 'app/AzureWorld/TotallyNotLuigiWorld'
+  solutionLuigiFile: 'TotallyNotLuigiWorld.csproj'
+  artifactLuigi: 'Luigi'
 
 jobs:
 - job: BuildMario
@@ -25,20 +29,32 @@ jobs:
 
   - task: NuGetCommand@2
     inputs:
-      restoreSolution: $(solutionMario)
+      restoreSolution: '$(solutionMario)/$(solutionMarioFile)'
 
   - task: VSBuild@1 
     inputs: 
-      solution: $(solutionMario)
+      solution: '$(solutionMario)/$(solutionMarioFile)'
       platform: $(buildPlatform)
       configuration: ${{ parameters.buildConfiguration }}
-  
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/$(solutionMario)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
+      OverWrite: true
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactMario)'
+      artifact: '$(artifactMario)'
+      publishLocation: 'pipeline'
+
   - powershell: |
-      $path = "$(Build.SourcesDirectory)"
+      $path = "$(Build.SourcesDirectory)\$(solutionMario)"
       $platform = "$(buildPlatform)"
       $buildConfig = "${{ parameters.buildConfiguration }}"
   
-      & "$path\app\AzureWorld\TotallyNotMarioWorld\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
+      & "$path\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
     displayName: Run Application
 
 - job: BuildLuigi
@@ -48,18 +64,30 @@ jobs:
 
   - task: NuGetCommand@2
     inputs:
-      restoreSolution: $(solutionLuigi)
+      restoreSolution: '$(solutionLuigi)/$(solutionLuigiFile)'
 
   - task: VSBuild@1 
     inputs: 
-      solution: $(solutionLuigi)
+      solution: '$(solutionLuigi)/$(solutionLuigiFile)'
       platform: $(buildPlatform)
       configuration: ${{ parameters.buildConfiguration }}
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/$(solutionLuigi)/bin/$(buildPlatform)/${{ parameters.buildConfiguration }}/net6.0'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
+      OverWrite: true
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/$(artifactLuigi)'
+      artifact: '$(artifactLuigi)'
+      publishLocation: 'pipeline'
   
   - powershell: |
-      $path = "$(Build.SourcesDirectory)"
+      $path = "$(Build.SourcesDirectory)\$(solutionLuigi)"
       $platform = "$(buildPlatform)"
       $buildConfig = "${{ parameters.buildConfiguration }}"
   
-      & "$path\app\AzureWorld\TotallyNotLuigiWorld\bin\$platform\$buildConfig\net6.0\TotallyNotLuigiWorld.exe"
+      & "$path\bin\$platform\$buildConfig\net6.0\TotallyNotLuigiWorld.exe"
     displayName: Run Application
