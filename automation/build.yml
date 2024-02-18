@@ -49,12 +49,22 @@ jobs:
       artifact: '$(artifactMario)'
       publishLocation: 'pipeline'
 
+- job: RunMario
+  displayName: Run Mario
+  dependsOn: BuildMario
+  steps: 
+  - task: DownloadBuildArtifacts@1
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(artifactMario)'
+      downloadPath: '$(System.ArtifactsDirectory)\$(artifactMario)'
+      cleanDestinationFolder: true
+
   - powershell: |
-      $path = "$(Build.SourcesDirectory)\$(solutionMario)"
-      $platform = "$(buildPlatform)"
-      $buildConfig = "${{ parameters.buildConfiguration }}"
+      $path = "$(System.ArtifactsDirectory)\$(artifactMario)"
   
-      & "$path\bin\$platform\$buildConfig\net6.0\TotallyNotMarioWorld.exe"
+      & "$path\TotallyNotMarioWorld.exe"
     displayName: Run Application
 
 - job: BuildLuigi
@@ -84,10 +94,20 @@ jobs:
       artifact: '$(artifactLuigi)'
       publishLocation: 'pipeline'
   
-  - powershell: |
-      $path = "$(Build.SourcesDirectory)\$(solutionLuigi)"
-      $platform = "$(buildPlatform)"
-      $buildConfig = "${{ parameters.buildConfiguration }}"
+- job: RunLuigi
+  displayName: Run Luigi
+  dependsOn: BuildLuigi
+  steps: 
+  - task: DownloadBuildArtifacts@1
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: '$(artifactLuigi)'
+      downloadPath: '$(System.ArtifactsDirectory)\$(artifactLuigi)'
+      cleanDestinationFolder: true
   
-      & "$path\bin\$platform\$buildConfig\net6.0\TotallyNotLuigiWorld.exe"
+  - powershell: |
+      $path = "$(System.ArtifactsDirectory)\$(artifactLuigi)"
+  
+      & "$path\TotallyNotLuigiWorld.exe"
     displayName: Run Application
